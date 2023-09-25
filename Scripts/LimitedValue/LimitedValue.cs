@@ -1,6 +1,6 @@
 using System;
 
-namespace LimitedValue
+namespace LimitedValues
 {
     public interface IReadOnlyLimitedValue<T> where T: IComparable<T>
     {
@@ -20,9 +20,9 @@ namespace LimitedValue
     [Serializable]
     public class LimitedValue<T> : ILimitedValue<T> where T: IComparable<T>
     {
-        private T value;
-        private T min;
-        private T max;
+        protected T value;
+        protected T min;
+        protected T max;
         public T Value => value;
         public T Min => min;
         public T Max => max;
@@ -32,7 +32,7 @@ namespace LimitedValue
             return ComparableUtil.IsUpperMin(value,Min) && ComparableUtil.IsUnderMax(value, Max);
         }
 
-        public void SetValue(T value)
+        public virtual void SetValue(T value)
         {
             if(!ComparableUtil.IsUpperMin(value,Min))
                 this.value = Min;
@@ -42,24 +42,31 @@ namespace LimitedValue
                 this.value = value;
         }
         
-        public bool TrySetMax(T max)
+        public virtual bool TrySetMax(T max)
         {
             if(ComparableUtil.IsUpperMin(max, Min))
             {
                 this.max = max;
+                if(value.CompareTo(this.max) > 0) value = max;
                 return true;
             }
             return false;
         }
         
-        public bool TrySetMin(T min)
+        public virtual bool TrySetMin(T min)
         {
             if(ComparableUtil.IsUnderMax(min, Max))
             {
                 this.min = min;
+                if(value.CompareTo(this.min) < 0) value = min;
                 return true;
             }
             return false;
+        }
+        
+        public LimitedValue(IReadOnlyLimitedValue<T> origin)
+        {
+            (value, min, max) = (origin.Value, origin.Min, origin.Max);
         }
 
         protected LimitedValue(T value, T min, T max)
@@ -101,28 +108,5 @@ namespace LimitedValue
         }
 
         public static implicit operator T(LimitedValue<T> self) => self.value;
-
-        static class ComparableUtil
-        {
-            public static bool IsUnderMax<T2>(T2 value, T2 max) where T2: IComparable<T2>
-            {
-                return value.CompareTo(max) <= 0;
-            }
-
-            public static bool  IsUpperMin<T2>(T2 value, T2 min) where T2: IComparable<T2>
-            {
-                return value.CompareTo(min) >= 0;
-            }
-
-            public static bool InBounded<T2>(T2 value, T2 min, T2 max) where T2: IComparable<T2>
-            {
-                return IsUpperMin(value,min) && IsUnderMax(value, max);
-            }
-
-            public static bool IsValid<T2>(T2 value, T2 min, T2 max) where T2: IComparable<T2>
-            {
-                return InBounded(value, min, max) && IsUpperMin(max, min) && IsUnderMax(min, max);
-            }
-        }
     }
 }
