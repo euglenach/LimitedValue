@@ -1,0 +1,11 @@
+{
+  "name": "com.euglenach.limitedvalue",
+  "version": "0.1.0",
+  "displayName": "LimitedValue",
+  "description": "",
+  "author": {
+    "name": "euglenach"
+  },
+  "license": "MIT",
+  "category": "Scripting"
+}
